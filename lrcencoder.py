@@ -1,11 +1,15 @@
 """
 Que pasa se o castear o inputFile non temos un numero de bits múltiplo de "k"?
+Temos que facer 16 ou 256?
+Todos os polinomios de grado r+1 pertenecen a F(x)
+
 """
 
 """
 Contantes de momento para probar o arquivo
 """
 import constant
+import mymath
 import numpy as np
 from numpy.polynomial import polynomial as P
 
@@ -16,8 +20,8 @@ def get_information_from_files():
     return information
 
 def prepareInformation(information):
-    binary_information = from_string_to_binary(information)
-    splitted_information = split_information_into_k_chunks(constant.K, binary_information)
+    binary_information = mymath.from_string_to_binary(information)
+    splitted_information = mymath.split_information_into_k_chunks(constant.K, binary_information)
     return splitted_information
 
 def encode(k_bits_data):
@@ -27,26 +31,11 @@ def encode(k_bits_data):
         encoded_data.append(encode_chunk(k_bits_data[i]))
     return encoded_data
 
-def from_string_to_binary(information):
-    print("Casting to binary-->"+information)
-    binary_information = information
-    #binary_information = ''.join(format(ord(i), '08b') for i in information) 
-    return binary_information
-
-def split_information_into_k_chunks(k, binary_information):
-    print("Splitting the information into chunks of size "+ str(k))
-    splitted_information = []
-    try:
-        for i in range(0,len(binary_information),4):
-            splitted_information.append(binary_information[i:i+4])
-    except:
-        print("NON SE INTRODUCIU UN NUMERO MULTIPLO DE K")
-    return splitted_information
-
 def encode_chunk(information):
     print("Encoding chunk, we are replicating now")
-    bit_matrix = from_bitstring_to_matrix(information)
+    bit_matrix = mymath.from_bitstring_to_matrix(information)
     evaluation_vector = create_evaluation_vector(bit_matrix)
+    print(evaluation_vector)
     information = information + information
     return information
 
@@ -58,58 +47,66 @@ def generate_files(encode_data):
         f.write(data_one_chunk[i])
         f.close()
 
-def from_bitstring_to_matrix(information):
-    np_bit_array = from_bitstring_to_np_array(information)
-    matrix = np_bit_array.reshape(constant.R,constant.K//constant.R)
-    return matrix
-
-def from_bitstring_to_np_array(information):
-    np_bit_array = np.array(information[0])
-    for i in range(1,len(information)):
-        np_bit_array = np.append(np_bit_array,information[i])
-    return np_bit_array
-
 def generate_gx():
-    g_x = [1,0,0,0]
+    g_x = 0
+    for i in range(0,pow(2,constant.R)): #Numero de polinomio de orden r+1
+        g_x = next_polynomial(g_x)
+        if not exist_in_galois_field(g_x):
+            continue
+        else:
+            if cumple_conficiones(g_x):
+                return g_x
+            continue
     return g_x
+
+def next_polynomial(g_x):
+    if g_x == 0:
+        new_g_x = [1]
+        for i in range(0,constant.R+1):#Grado del polinomio es r+1
+            new_g_x.append(0)
+        return new_g_x
+    else:
+        g_x = mymath.suma_binaria(bin(int(''.join(map(str, g_x)), 2) << 1),1)
+        mymath.from_binary_to_coefs(g_x)
+
+    return [1,0,0,0]
+
+def cumple_conficiones(g_x):
+    return True
+
+def exist_in_galois_field(polinomio):
+    return True
 
 def create_evaluation_vector(bit_matrix):
     x_polinomial = [1]
-    for i in range(0,constant.FILAS):
-        print("DEBUGGING")
-        second_sumatory_coeficients = get_second_summatory(i,bit_matrix)
-        #totalp = np.polymul(np.array(x_polinomial, dtype=float), np.array(second_sumatory_coeficients, dtype=float))
-        print(second_sumatory_coeficients)
-        """
-        print(str(x_polinomial) + "*" +str(second_sumatory_coeficients))
-        print(totalp)
-        print("ULTIMO PASO")
-        print(str(totalp) + "*" +str(g_x))
-        print(final)
-        x_polinomial.append(0)
-        """
-    print("END OF DEBUGGIN")
-    exit
-    return "o"
-
-def get_second_summatory(fila, bit_matrix):
-    coeficients = []
+    f_x_coef = []
     g_x = generate_gx()
+    for i in range(0,constant.FILAS):
+        second_sumatory_coeficients = get_second_summatory(i, bit_matrix, g_x)
+        coeficient_i = np.polymul(x_polinomial,second_sumatory_coeficients)
+        f_x_coef.append(coeficient_i)
+        #print(str(x_polinomial) +" * "+ str(second_sumatory_coeficients) +" = "+ str(coeficient_i))
+        x_polinomial.append(0) #This is intruction is equivalent to multiply the polinomial by the independent variable (usually x)
+    f_x = mymath.polinomial_sum(f_x_coef)
+    return f_x
 
-    for j in range(0,constant.COLUMNAS):
-        matrix_element = float(bit_matrix[fila,j])
-        print("g(X)= "+str(g_x) +"-----j= "+str(j))
-        newpow= P.polypow(g_x,j)
-        print(newpow)
-        newcoef = np.polymul(matrix_element,newpow)
-        
-        coeficients.insert(0,newcoef)
-    return coeficients
+def get_second_summatory(fila, bit_matrix, g_x):
+    coeficients = []
+    for j in range(0, constant.COLUMNAS):
+        matrix_element = [int(bit_matrix[fila,j])]
+        #print("g(X)= "+str(g_x) +"-----j= "+str(j))
+        g_x_upto_j = mymath.polinomial_power(g_x,j)
+        newcoef = np.polymul(matrix_element,g_x_upto_j)
+        #print( "g(X)^j= " +str(g_x_upto_j) +"-----matrix_element= "+str(matrix_element)+ "-----Result:"+str(newcoef) )
+        coeficients.append(newcoef) 
+    finalform = mymath.polinomial_sum(coeficients)
+    #print("Second Sumatory-----"+str(finalform))
+    return finalform
 
 information = get_information_from_files()
 k_bits_data = prepareInformation(information)
 encode_data = encode(k_bits_data)
-print("codedData -->"+ str(encode_data))
+#print("codedData -->"+ str(encode_data))
 generate_files(encode_data)
 #answer = decode()
 #print(answer)
