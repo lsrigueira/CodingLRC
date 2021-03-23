@@ -35,6 +35,10 @@ def encode_chunk(information):
     print("Encoding chunk, we are replicating now")
     bit_matrix = mymath.from_bitstring_to_matrix(information)
     evaluation_vector = create_evaluation_vector(bit_matrix)
+    Rsets = [[1, 3, 9], [2, 5, 6], [4, 10 ,12]]
+    for i in range(0,len(Rsets)):
+        for j in range (0,3):
+            print(np.polyval(evaluation_vector,Rsets[i][j])%constant.Q)
     print(evaluation_vector)
     information = information + information
     return information
@@ -51,6 +55,7 @@ def generate_gx():
     g_x = 0
     for i in range(0,pow(2,constant.R)): #Numero de polinomio de orden r+1
         g_x = next_polynomial(g_x)
+        print("ola")
         if not exist_in_galois_field(g_x):
             continue
         else:
@@ -72,7 +77,36 @@ def next_polynomial(g_x):
     return [1,0,0,0]
 
 def cumple_conficiones(g_x):
+    """
+        We need n/(r+1) subsets of points of Fq. Each subset should have r+1 elements
+    """
+    matriz_evaluacion = get_evaluation_matrix(g_x)
+    all_sets = get_sets(matriz_evaluacion)
+    print(matriz_evaluacion)
+    print("end")
+    if len(all_sets) >= constant.N / (constant.R+1):
+        print("Falta devolver os sets, hai que cambiar o flow")
+        return True
+
     return True
+
+def get_evaluation_matrix(g_x):
+    """
+        Evaluate g_x in each point of Fq. The number evaluated will be placed in the result row \n
+        i.e-> if g(x)=x^3 in F_{13} and we are evaluating 5. We will put the 5 into the matrix_evaluation row 8 (as 5^3 mod 13 = 8)
+    """
+    evaluation_matrix = [[] for x in range(constant.Q)]
+    for i in range (constant.Q): #Se valoran todos los numeros de Fq
+        evaluation_matrix[np.polyval(g_x,i)%constant.Q].append(i)
+    return evaluation_matrix
+
+def get_sets(matrix):
+    Rset = []
+    for i in range(len(matrix)):
+        if len(matrix[i]) >= constant.R +1:
+            new_set = [matrix[i][j] for j in range(constant.R+1)]
+            Rset.append(new_set)
+    return Rset
 
 def exist_in_galois_field(polinomio):
     return True
