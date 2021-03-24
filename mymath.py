@@ -30,6 +30,10 @@ def from_bitstring_to_matrix(information, rows, columns):
     matrix = np_bit_array.reshape(rows, columns)
     return matrix
 
+def from_array_to_matrix(information, rows, columns):
+    matrix = information.reshape(rows, columns)
+    return matrix
+
 def from_bitstring_to_np_array(information):
     np_bit_array = np.array(information[0])
     for i in range(1,len(information)):
@@ -78,12 +82,19 @@ def polinomial_power(polinomio, exponente):
         polinomio = np.polymul(polinomio,static_polinomio)
     return polinomio
 
+def sum_elemts_galois_array(galois_field, array):
+    final_array = galois.Poly(0, field=galois_field)
+    for i in range(len(array)):
+        final_array = final_array + array[i]
+    return final_array
+
 def len_galois_array(array):
     num = 0
     try:
         i = 0
         while True:
-            ola = array[i]
+            array[i]
+            num = num +1
             i = i+1
     except:
         return num
