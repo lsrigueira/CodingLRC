@@ -69,11 +69,14 @@ class lrc(encoder.Encoder) :
         matriz_evaluacion = self.get_evaluation_matrix(g_x)
         all_sets = self.get_sets(matriz_evaluacion)
         print(matriz_evaluacion)
+        print(all_sets)
         print("end")
         if len(all_sets) >= self.N / (self.R+1):
-            print("Falta devolver os sets, hai que cambiar o flow")
+            self.Rsets = []
+            for i in range (0, self.N // (self.R+1)):
+                self.Rsets.append(all_sets[i])
             return True
-        return True
+        return False
 
     def get_evaluation_matrix(self, g_x):
         """
@@ -83,7 +86,6 @@ class lrc(encoder.Encoder) :
         print(g_x)
         evaluation_matrix = [[] for x in range(self.Q)]
         for i in range (self.Q): #Se valoran todos los numeros de Fq
-            #evaluation_matrix[np.polyval(g_x,i)%constant.Q].append(i)
             galois_polinomial= galois.Poly(g_x, field=self.GF)
             evaluation_matrix[galois_polinomial(i)].append(i)
         return evaluation_matrix
@@ -115,13 +117,20 @@ class lrc(encoder.Encoder) :
 
     def get_second_summatory(self, fila, bit_matrix, g_x):
         coeficients = []
+        g_x = galois.Poly(g_x,field=self.GF)
         for j in range(0, self.K//self.R): # we have k//r columns
-            matrix_element = [int(bit_matrix[fila,j])]
+            matrix_element = galois.Poly([int(bit_matrix[fila,j])], self.GF)
             #print("g(X)= "+str(g_x) +"-----j= "+str(j))
-            g_x_upto_j = mymath.polinomial_power(g_x,j)
-            newcoef = np.polymul(matrix_element,g_x_upto_j)
+            g_x_upto_j = g_x ** j
+            newcoef = matrix_element * g_x_upto_j
             #print( "g(X)^j= " +str(g_x_upto_j) +"-----matrix_element= "+str(matrix_element)+ "-----Result:"+str(newcoef) )
             coeficients.append(newcoef) 
-        finalform = mymath.polinomial_sum(coeficients)
+        print("eeee")
+        polinomio_final = galois.Poly([0],self.GF)
+        for i in range(0, mymath.len_galois_array(coeficients)):
+            polinomio_final = polinomio_final + coeficients[i]
+        
+        #DE MOMENTO ASI
+        #finalform = mymath.polinomial_sum(coeficients)
         #print("Second Sumatory-----"+str(finalform))
-        return finalform
+        return polinomio_final

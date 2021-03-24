@@ -57,13 +57,13 @@ def split_information_into_k_chunks(k, binary_information):
     return splitted_information
 
 def suma_binaria(num1,num2):
-    sum = bin(int(num1, 2) + int(num2, 2))
+    sum = bin(int(str(num1), 2) + int(str(num2), 2))
     return sum[2:] 
 
 def polinomial_sum(arraypolinomios):
     polinomio_final = 0
     for i in range(0, len(arraypolinomios)):
-        polinomio_final = np.polyadd(polinomio_final, arraypolinomios[i])
+        polinomio_final = polinomio_final + arraypolinomios[i]
     return polinomio_final
 
 
@@ -77,3 +77,13 @@ def polinomial_power(polinomio, exponente):
     for j in range(0,exponente-1):
         polinomio = np.polymul(polinomio,static_polinomio)
     return polinomio
+
+def len_galois_array(array):
+    num = 0
+    try:
+        i = 0
+        while True:
+            ola = array[i]
+            i = i+1
+    except:
+        return num
