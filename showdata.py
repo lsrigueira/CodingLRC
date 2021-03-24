@@ -1,7 +1,6 @@
 import os
 import constant
 
-
 for i in range (0,constant.N):
     try:
         f = open("TestFile.shar"+str(i))
