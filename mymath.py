@@ -1,21 +1,23 @@
-import constant
 import numpy as np
+import galois
 from galois_field.GF import GF, FFElement
 from galois_field.fast_polynom import FastPolynom
 
 class galoisField:
-    
+
+    """    
     def __init__(self, p, exp, irr_poly={0: 1, 1: 1, 4: 1}):
         irr_poly = FastPolynom(irr_poly)
         self.gfield = GF(2, m=4, irr=irr_poly)
         self.polinomials = []
         for i in range(0,constant.Q):
             self.polinomials.append(FFElement(self.gfield,FastPolynom({i:1})))
+        
 
     def show_polinomials(self):
         for i in range(0,len(self.polinomials)):
             print(self.polinomials[i])
-            
+    """     
 
 def from_string_to_binary(information):
     print("Casting to binary-->"+information)
@@ -23,9 +25,9 @@ def from_string_to_binary(information):
     #binary_information = ''.join(format(ord(i), '08b') for i in information) 
     return binary_information
 
-def from_bitstring_to_matrix(information):
+def from_bitstring_to_matrix(information, rows, columns):
     np_bit_array = from_bitstring_to_np_array(information)
-    matrix = np_bit_array.reshape(constant.R,constant.K//constant.R)
+    matrix = np_bit_array.reshape(rows, columns)
     return matrix
 
 def from_bitstring_to_np_array(information):
