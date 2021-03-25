@@ -33,10 +33,11 @@ def prepareInformation(information, symbol_lenght):
     splitted_information = mymath.split_information_into_k_chunks(symbol_lenght, binary_information)
     return splitted_information
 
-def generate_files(encode_data):
+def write_files(encode_data):
     for i in range(0,len(encode_data)):
-        f = open("TestFile.shar"+str(i), "w")
-        f.write(encode_data[i])
+        f = open("TestFile.shar"+str(i), "ab")
+        f.write(encode_data[i].encode('utf-8'))
+        print(ord(encode_data[i]))
         f.close()
 
 
@@ -49,9 +50,16 @@ my_encoder = LRCencoder.lrc(9, 4, 2, 8)
 for i in range(0,len(ascii_data),4):
     print("SOLO DISPONIBLE PARA K MULTIPLO DE 4 DE MOMENTO")
     encode_data = my_encoder.encode_chunk(ascii_data)
-    print(encode_data)
+
+to_print = [ord(x) for x in encode_data]
+print(to_print)
+print(my_encoder.Rsets)
+write_files(encode_data)
+write_files(encode_data)
+write_files(encode_data)
+write_files(encode_data)
+
 #print(encode_data)
 #print("codedData -->"+ str(encode_data))
-generate_files(encode_data)
 #answer = decode()
 #print(answer)

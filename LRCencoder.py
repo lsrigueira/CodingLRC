@@ -2,6 +2,8 @@ import mymath
 import numpy as np
 import encoder
 import galois
+import json
+
 
 class lrc(encoder.Encoder) :
 
@@ -14,6 +16,23 @@ class lrc(encoder.Encoder) :
         self.Q = 2** q
         self.GF = galois.GF2m_factory(q)
         self.g_x = self.generate_gx() #This method also create a "self.RSet" variable with the sets you need (not all of them)
+        self.write_file_configuration()
+
+    def write_file_configuration(self):
+        configuration = {
+            "N":self.N,
+            "K":self.K,
+            "R":self.R,
+            "P":self.P,
+            "M":self.M,
+            "Q":self.Q,
+            "RSets":self.Rsets
+        }
+        y = json.dumps(configuration)
+        f = open("conf.json","w")
+        f.write(y)
+        f.close()
+
 
     def __str__(self):
         return "LRC encoder. Parameters{N:"+str(self.N)+" K:"+str(self.K)+" R:"+str(self.R) \
