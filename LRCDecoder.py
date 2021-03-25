@@ -2,9 +2,13 @@
 import os
 import glob
 import json
+import math
+import mymath
+import decoder
 from sage.all import *
 
-class lrc():
+
+class lrc(decoder.Decoder):
     def __init__(self):
         if os.path.isfile("conf.json"):
             data = json.load(open("conf.json"))
@@ -17,30 +21,111 @@ class lrc():
             self.N = 9
             self.K = 4
             self.R = 2
-            self.Q = 8
+            self.Q = 256
             self.RSets = [[1, 214, 215], [97, 170, 203], [2, 177, 179]]
         self.read_files()
 
-    def read_files(self):
-        fileList = sorted(glob.glob('TestFile.shar*'))
-        self.files_data = []
-        for data_file in fileList:
-            f = open(data_file, "rb")
-            string_data = f.read().decode("utf-8")
-            ascii_data = [ord(x) for x in string_data]
-            self.files_data.append(ascii_data)
-            f.close()
-        
+    def read_file(self, i):
+        f = open('TestFile.shar'+str(i), "rb")
+        string_data = f.read().decode("utf-8")
+        ascii_data = [ord(x) for x in string_data]
+        f.close()
+        return ascii_data
 
+    def read_files(self):
+        self.files_data = []
+        for i in range(1,self.N+1):
+            try:
+                file_data = self.read_file(i)
+                self.files_data.append(file_data)
+            except FileNotFoundError:
+                print("Missing file " + str(i) + " start recovering")
+                try:
+                    files_to_complete_set = ((self.R+1) - (i % (self.R+1)))%(self.R+1)
+                    self.files_data.append("MISSING")
+                    for j in range(1, files_to_complete_set+1):
+                        file_data = self.read_file(i+j)    
+                        self.files_data.append(file_data)        
+                    self.recover_file(i)
+                    i = i+j
+
+                except:
+                    print("More than one fail in the same set. Cant recover")
+                """
+                1--> falla o primeiro --> leer dous mais 
+                2--> falla o segundo --> leer un mais
+                0--> falla o ultimo  --> non leer
+                """
+
+    def recover_file(self, file_num):
+        print("Vamos a recuperar o arquivo "+str(file_num))
+        field = GF(self.Q, 'a')
+        a = field.gen()
+        R = PolynomialRing(field, "x")
+        x_points, pointo_to_recover = self.get_x_point_to_recover_file(file_num)
+        y_points = self.get_y_points_to_recover_file(file_num)
+        #? This points are got using RSets, they are independent from the lenght of the original file
+        
+        #Changuing format
+        points_to_evaluate = []
+        for i in range(0, len(x_points)):
+            points_to_evaluate.append((x_points[i],y_points[i]))
+        
+        print(points_to_evaluate)
+        polynom = R.lagrange_polynomial(points_to_evaluate)
+        recovery_point_sage = polynom(pointo_to_recover)
+        recovered_data = super().from_polinomial_sage_to_decimal(recovery_point_sage)
+        print(recovered_data)
+        """
+        polynom = R.lagrange_polynomial(points)
+        print(polynom.coefficients(sparse=False))
+        print(polynom(a**7+a**6+a**3+a+1))
+        """
+    
+    def get_y_points_to_recover_file(self, file_num):
+        set_number = self.get_sets_index_belong_file(file_num)
+        y_points = []
+        for i in range(1, self.R+2): # R+1 elements inside a set. Index begin in one (so we have R+2)
+            if not (i + self.R * set_number == file_num):
+                data = self.files_data[(i + self.R * set_number)-1][0]
+                y_points.append(super().from_decimal_to_sage_polinomial(data))
+        return y_points
+
+
+    def get_sets_index_belong_file(self, file_num):
+        """
+            Range from 0 to N-1
+        """
+        set_number = math.floor(float(file_num-1)/float(len(self.RSets)))
+        return set_number
+
+
+    def get_RSets_from_file(self, file_num):
+        get_sets_index =  self.get_sets_index_belong_file(file_num)
+        return self.RSets[get_sets_index]
+
+    def get_x_point_to_recover_file(self, file_num):
+        specific_set = self.get_RSets_from_file(file_num)
+        index_point_inside_set = (file_num -1 ) % self.R
+        specific_set_sega_version = []
+        point_to_recover = 0
+        for i in range(0,len(specific_set)):
+            if(i == index_point_inside_set ):
+                point_to_recover = super().from_decimal_to_sage_polinomial(specific_set[i])
+            else:
+                specific_set_sega_version.append(super().from_decimal_to_sage_polinomial(specific_set[i]))
+        return specific_set_sega_version, point_to_recover    
+        #return "a","b"
+    
     def getWord(self, byte_position):
-        word = [x[byte_position] for x in self.files_data ]            
+        word = []
+        for i in range(0,len(self.files_data)):
+            word.append(self.files_data[i][byte_position])
         return word
 
 decoder = lrc()
 
-for i in range(0,4):
-    print(decoder.getWord(i))
-
+decoder.getWord(1)
 
 
 """

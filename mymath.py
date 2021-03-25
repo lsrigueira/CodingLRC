@@ -46,7 +46,6 @@ def from_binary_to_coefs(binario):
         coefs.append(int(binario[i:i+1]))
     return coefs
 
-
 def split_information_into_k_chunks(k, binary_information):
     """
         Split binary_information into k chunks
@@ -98,3 +97,4 @@ def len_galois_array(array):
             i = i+1
     except:
         return num
+

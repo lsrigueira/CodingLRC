@@ -1,26 +1,69 @@
-from galois_field import *
-from galois_field.GF import GF, FFElement
-from galois_field.fast_polynom import FastPolynom
-import constant
-
-
-irr_poly = FastPolynom({0: 1, 1: 1, 4: 1})
-gfield = GF(2, m=4, irr=irr_poly)
-e1 = FFElement(gfield, FastPolynom({0: 1, 1: 1}))
-e2 = FFElement(gfield, FastPolynom({0: 1, 1: 1}))
-e_res = e1 * e2
-"""
-for i in range(0, constant.Q)
-    print(FFElement())
-"""
+import galois
 import mymath
+import numpy as np
+#import main
+import itertools
 
-myGALOISFIELD = mymath.galoisField(2,4)
+
+"""
+GF = galois.GF2m_factory(4)
+polinomio = galois.Poly([1, 0], field=GF)
+resultado = polinomio(1)
+print(int(resultado))
+"""
 
 
-#ola.show_polinomials()
-#print(gfield.__annotations__)
-#print(FFElement.gen_one(gfield))
-#print(FFElement(gfield,FastPolynom({4:1})))
+#print("ola")
+"""
+Lugi ten estos sets [[1, 214, 215], [97, 170, 203], [2, 177, 179]] e perdeu o valor correspondiente o set 203
+Esta é a palabra codificada [4,27,28,245,206,105,158,80,152]
+Interesanos a parte do set de recuperacion. 
+O set é [97, 170, 203]
+os valores asociados son [245,206,105] (obviamente o 105 non o sabemos que foi o que se perdeu)
+Sabemos que f(97)=245 e sabemos que f(170)=206
+Calculando o polinomio de grado 1 que pasa por eses puntos quedanos [66 82]. Evaluamos ese polinomio en 203 e tennos que dar 105
 
-print(FFElement(myGALOISFIELD.gfield, FastPolynom({1:1})).inverse())
+GF = galois.GF2m_factory(8)
+polinomio = galois.Poly([66, 82], field=GF)
+print(polinomio)
+print(int(polinomio(97)))
+print(int(polinomio(170)))
+print(int(polinomio(203)))
+"""
+
+
+
+from sage.all import *
+
+#points = [(a**6+a**5+1,a**7+a**6+a**5+a**4+a**2+1), (a**7+a**5+a**3+a,a**7+a**6+a**3+a**2+a)]
+
+field = GF(2**8, 'a')
+a = field.gen()
+R = PolynomialRing(field, "x")
+points = [(a**6+a**5+1,a**7+a**6+a**5+a**4+a**2+1), (a**7+a**5+a**3+a,a**7+a**6+a**3+a**2+a)]
+polynom = R.lagrange_polynomial(points)
+print(polynom.coefficients(sparse=False))
+print(polynom(a**7+a**6+a**3+a+1))
+
+
+"""
+def DecimalToBinary(num):
+    if num >= 1:
+        DecimalToBinary(num // 2)
+        print(num % 2) 
+
+def binaryToDecimal(binary):
+    field = GF(2**8, 'a')
+    a = field.gen()
+    binary1 = binary
+    decimal, i, n = 0, 0, 0
+    while(binary != 0):
+        dec = binary % 10
+        decimal = decimal + dec * a ** i
+        binary = binary//10
+        i += 1
+    print(decimal)  
+"""
+
+
+print(bin(256)[2:])

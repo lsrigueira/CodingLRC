@@ -35,10 +35,10 @@ def prepareInformation(information, symbol_lenght):
 
 def write_files(encode_data):
     for i in range(0,len(encode_data)):
-        f = open("TestFile.shar"+str(i), "ab")
-        f.write(encode_data[i].encode('utf-8'))
-        print(ord(encode_data[i]))
-        f.close()
+        for j in range(0, len(encode_data[i])):    
+            f = open("TestFile.shar"+str(i+1), "ab")
+            f.write(encode_data[i][j].encode('utf-8'))
+            f.close()
 
 
 new_execution()
@@ -46,18 +46,12 @@ information = get_information_from_files()
 print("We are using ascii which is already a byte (256 bits symbol)")
 ascii_data = [ord(ascii_info) for ascii_info in information]
 my_encoder = LRCencoder.lrc(9, 4, 2, 8)
-
+encoded_data = []
 for i in range(0,len(ascii_data),4):
     print("SOLO DISPONIBLE PARA K MULTIPLO DE 4 DE MOMENTO")
-    encode_data = my_encoder.encode_chunk(ascii_data)
-
-to_print = [ord(x) for x in encode_data]
-print(to_print)
-print(my_encoder.Rsets)
-write_files(encode_data)
-write_files(encode_data)
-write_files(encode_data)
-write_files(encode_data)
+    encoded_data.append(my_encoder.encode_chunk(ascii_data))
+print(encoded_data)
+write_files(encoded_data)
 
 #print(encode_data)
 #print("codedData -->"+ str(encode_data))

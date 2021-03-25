@@ -39,15 +39,11 @@ class lrc(encoder.Encoder) :
             + " P:"+str(self.P) + " M:"+str(self.M) +" Q:"+str(self.Q) +" GF:"+str(self.GF)
 
     def encode(self, k_symbols_data):
-        print("Encoding Information")
         encoded_data = []
-        #for i in range(0,len(k_symbols_data)):
-        #    print("ENCODING"+str(k_symbols_data[i]))
         encoded_data.append(self.encode_chunk(k_symbols_data))
         return encoded_data
 
     def encode_chunk(self, information):
-        print("Encoding chunk, we are replicating now")
         information = np.array(information)
         bit_matrix = mymath.from_array_to_matrix(information, self.R, self.K//self.R)
         evaluation_vector = self.create_evaluation_vector(bit_matrix)
