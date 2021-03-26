@@ -9,7 +9,6 @@ Todos os polinomios de grado r+1 pertenecen a F(x)
 Contantes de momento para probar o arquivo
 """
 import mymath
-import galois
 import numpy as np
 from numpy.polynomial import polynomial as P
 import LRCencoder
@@ -25,7 +24,7 @@ def new_execution():
 
 def get_information_from_files(filename):
     print("Files information stores")
-    f = open(filename, "rb")
+    f = open(filename, "r")
     information = f.read()
     return information
 

@@ -1,4 +1,8 @@
-
+*.pdf
+*png
+*mkv
+*mp4
+*json
 __pycache*
 *lut.*
 TESTFILE
