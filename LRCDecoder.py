@@ -1,4 +1,6 @@
 #!/home/lionel/Universidade/Segunto_cuatri/sage/sage-9.2/sage -python3
+import timeit as timing
+
 import os
 import glob
 import json
@@ -142,17 +144,25 @@ class lrc(decoder.Decoder):
         return word
 
     def translate(self, word):
-        return self.words_dict[str(word)]
+        try:
+            return self.words_dict[str(word)]
+        except KeyError:
+            return 
 
 new_decodification()
+start_decode = timing.default_timer()
 decoder = lrc()
-print(decoder.words_dict)
+stop_decode = timing.default_timer()
+print('Recover Time: ', stop_decode - start_decode) 
+
+#print(decoder.words_dict)
 i=-1
+start_translate = timing.default_timer()
 while True:
     i=i+1
     try:
         coded_word = decoder.getWord(i)
-        print(coded_word)
+        #print(coded_word)
         decoded_word = [chr(x) for x in decoder.translate(coded_word)]
         f = open("Decodified.txt", "ab")
         for j in range(0,len(decoded_word)):
@@ -160,5 +170,8 @@ while True:
         f.close()
 
     except IndexError:
+        stop_translate = timing.default_timer()
+        print('Translate Time: ', stop_translate - start_translate) 
+
         print("End of decodification")
         exit()

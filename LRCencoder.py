@@ -3,7 +3,7 @@ import numpy as np
 import encoder
 import galois
 import json
-
+import timeit
 
 class lrc(encoder.Encoder) :
 
@@ -48,11 +48,11 @@ class lrc(encoder.Encoder) :
         while len(information) != self.chunksize:
             information.append("0")
         information = np.array(information)
-        bit_matrix = mymath.from_array_to_matrix(information, self.R, self.K//self.R)
+        bit_matrix = mymath.from_array_to_matrix(information, self.R, (self.K//self.R))
         evaluation_vector = self.create_evaluation_vector(bit_matrix)
         coded_info = []
         for i in range(0,len(self.Rsets)):
-            for j in range (0,3):
+            for j in range (0, self.R+1):
                 coded_info.append(evaluation_vector(self.Rsets[i][j]))
         coded_info = [ int(x) for x in coded_info ]
         coded_info = [ chr(x) for x in coded_info ]
@@ -86,13 +86,16 @@ class lrc(encoder.Encoder) :
         """
             We need n/(r+1) subsets of points of Fq. Each subset should have r+1 elements
         """
+        #print("PASA POR AQUI")
         matriz_evaluacion = self.get_evaluation_matrix(g_x)
         all_sets = self.get_sets(matriz_evaluacion)
+        #print(all_sets)
         if len(all_sets) >= self.N / (self.R+1):
             self.Rsets = []
             for i in range (0, self.N // (self.R+1)):
                 self.Rsets.append(all_sets[i])
             return True
+        
         return False
 
     def get_evaluation_matrix(self, g_x):
@@ -109,6 +112,7 @@ class lrc(encoder.Encoder) :
     def get_sets(self, matrix):
         Rset = []
         for i in range(len(matrix)):
+            #print(len(matrix[i]))
             if len(matrix[i]) >= self.R +1:
                 new_set = [matrix[i][j] for j in range(self.R+1)]
                 Rset.append(new_set)

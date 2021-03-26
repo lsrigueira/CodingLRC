@@ -15,6 +15,7 @@ import LRCencoder
 import os
 import glob
 import json
+import timeit
 
 def new_execution():
     fileList = glob.glob('Test*')
@@ -35,26 +36,31 @@ def prepareInformation(information, symbol_lenght):
 
 def write_files(encode_data):
     for i in range(0,len(encode_data)):
-        for j in range(0, len(encode_data[i])):    
+        for j in range(0, len(encode_data[i])):
             f = open("TestFile.shar"+str(j+1), "ab")
             f.write(encode_data[i][j].encode('utf-8'))
             f.close()
 
 
 new_execution()
-information = get_information_from_files("TESTFILE")
+information = get_information_from_files("TESTFILE6")
 print("We are using ascii which is already a byte (256 bits symbol)")
 ascii_data = [ord(ascii_info) for ascii_info in information]
-my_encoder = LRCencoder.lrc(9, 4, 2, 8)
+N, K, R, Q = 9, 4, 2, 8
+my_encoder = LRCencoder.lrc(N, K, R, Q)
 encoded_data = []
 words_dict = {}
-for i in range(0,len(ascii_data),4):
-    data_coded = my_encoder.encode_chunk(ascii_data[i:i+4])
+start = timeit.default_timer()
+for i in range(0,len(ascii_data),K):
+    data_coded = my_encoder.encode_chunk(ascii_data[i:i+K])
     coded_in_asccii = [ord(x) for x in data_coded]
-    words_dict[str(coded_in_asccii)]=ascii_data[i:i+4]
+    words_dict[str(coded_in_asccii)]=ascii_data[i:i+K]
     encoded_data.append(data_coded)
+#Your statements here
+stop = timeit.default_timer()
+print('Time: ', stop - start)  
 write_files(encoded_data)
-print(words_dict)
+#print(words_dict)
 json.dump(words_dict, open("words_dict.json",'w'))
 
 #print(encode_data)
