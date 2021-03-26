@@ -29,10 +29,8 @@ class Decoder(ABC):
         return poly 
 
     def from_polinomial_sage_to_decimal(self, polynomial):
-        print("---------------")
-        polynomial_str = str(polynomial).replace("1"," 0").replace(" a "," 1 ").replace("a^","")
+        polynomial_str = str(polynomial).replace("1"," 0").replace("a^","").replace("a"," 1")
         index = [int(x.strip())+1 for x in polynomial_str.split("+")]
-        print(polynomial)
         binario = None
         for i in range(1,index[0]+1):
             if i in index:

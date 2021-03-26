@@ -14,6 +14,7 @@ class lrc(encoder.Encoder) :
         self.P = 2
         self.M = 4
         self.Q = 2** q
+        self.chunksize = k
         self.GF = galois.GF2m_factory(q)
         self.g_x = self.generate_gx() #This method also create a "self.RSet" variable with the sets you need (not all of them)
         self.write_file_configuration()
@@ -44,6 +45,8 @@ class lrc(encoder.Encoder) :
         return encoded_data
 
     def encode_chunk(self, information):
+        while len(information) != self.chunksize:
+            information.append("0")
         information = np.array(information)
         bit_matrix = mymath.from_array_to_matrix(information, self.R, self.K//self.R)
         evaluation_vector = self.create_evaluation_vector(bit_matrix)

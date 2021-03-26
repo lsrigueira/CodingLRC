@@ -7,7 +7,9 @@ import mymath
 import decoder
 from sage.all import *
 
-
+def new_decodification():
+    if os.path.isfile("Decodified.txt"):
+        os.remove("Decodified.txt")
 class lrc(decoder.Decoder):
     def __init__(self):
         if os.path.isfile("conf.json"):
@@ -23,6 +25,11 @@ class lrc(decoder.Decoder):
             self.R = 2
             self.Q = 256
             self.RSets = [[1, 214, 215], [97, 170, 203], [2, 177, 179]]
+        try:
+            self.words_dict = json.load(open("words_dict.json"))
+        except FileExistsError:
+            print("No dictionary to tranlate")
+            exit()
         self.read_files()
 
     def read_file(self, i):
@@ -34,22 +41,25 @@ class lrc(decoder.Decoder):
 
     def read_files(self):
         self.files_data = []
-        for i in range(1,self.N+1):
+        i=1
+        while (i <= self.N):
             try:
                 file_data = self.read_file(i)
                 self.files_data.append(file_data)
+                i=i+1
             except FileNotFoundError:
-                print("Missing file " + str(i) + " start recovering")
                 try:
-                    files_to_complete_set = ((self.R+1) - (i % (self.R+1)))%(self.R+1)
+                    files_to_complete_set = ((self.R+1) - (i % (self.R+1))) % (self.R+1)
                     self.files_data.append("MISSING")
+                    incremento = 1
                     for j in range(1, files_to_complete_set+1):
+                        incremento = incremento +1
                         file_data = self.read_file(i+j)    
-                        self.files_data.append(file_data)        
+                        self.files_data.append(file_data)   
                     self.recover_file(i)
-                    i = i+j
-
-                except:
+                    self.files_data[i-1] = self.read_file(i)
+                    i = i + incremento
+                except FileNotFoundError:
                     print("More than one fail in the same set. Cant recover")
                 """
                 1--> falla o primeiro --> leer dous mais 
@@ -58,36 +68,38 @@ class lrc(decoder.Decoder):
                 """
 
     def recover_file(self, file_num):
-        print("Vamos a recuperar o arquivo "+str(file_num))
+        #print("Vamos a recuperar o arquivo "+str(file_num))
         field = GF(self.Q, 'a')
         a = field.gen()
         R = PolynomialRing(field, "x")
         x_points, pointo_to_recover = self.get_x_point_to_recover_file(file_num)
-        y_points = self.get_y_points_to_recover_file(file_num)
         #? This points are got using RSets, they are independent from the lenght of the original file
-        
         #Changuing format
-        points_to_evaluate = []
-        for i in range(0, len(x_points)):
-            points_to_evaluate.append((x_points[i],y_points[i]))
-        
-        print(points_to_evaluate)
-        polynom = R.lagrange_polynomial(points_to_evaluate)
-        recovery_point_sage = polynom(pointo_to_recover)
-        recovered_data = super().from_polinomial_sage_to_decimal(recovery_point_sage)
-        print(recovered_data)
-        """
-        polynom = R.lagrange_polynomial(points)
-        print(polynom.coefficients(sparse=False))
-        print(polynom(a**7+a**6+a**3+a+1))
-        """
+        try:
+            for word in range(0,100):
+                y_points = self.get_y_points_to_recover_file(file_num, word)
+                points_to_evaluate = []
+                for i in range(0, len(x_points)):
+                    points_to_evaluate.append((x_points[i],y_points[i]))
+                polynom = R.lagrange_polynomial(points_to_evaluate)
+                recovery_point_sage = polynom(pointo_to_recover)
+                #print("**********************************")
+                recovered_data = int(str(super().from_polinomial_sage_to_decimal(recovery_point_sage)))
+                #print(recovered_data)
+                #print("**********************************")
+                self.write_file_symbol(file_num,chr(recovered_data))
+        except IndexError:
+            print("File recovered")
     
-    def get_y_points_to_recover_file(self, file_num):
+    def get_y_points_to_recover_file(self, file_num, word):
         set_number = self.get_sets_index_belong_file(file_num)
         y_points = []
-        for i in range(1, self.R+2): # R+1 elements inside a set. Index begin in one (so we have R+2)
-            if not (i + self.R * set_number == file_num):
-                data = self.files_data[(i + self.R * set_number)-1][0]
+        
+        for i in range(1, (self.R+1)+1 ): #Index begin in one (so we have R+1)
+            if not (i + ((self.R+1) * set_number) == file_num):
+                #print(self.files_data[(i + (self.R+1) * set_number) -1])
+                data = self.files_data[ (i + (self.R+1) * set_number) -1][word] #FIles start in 1. Files_data is a local list (start at 0)
+                #print("Recuperar-->" +str(file_num)+"  LENDO-->" +str(i + (self.R+1) * set_number)+ " PALABRA--->" +str(word)+ " Data-->"+ str(data))
                 y_points.append(super().from_decimal_to_sage_polinomial(data))
         return y_points
 
@@ -106,7 +118,7 @@ class lrc(decoder.Decoder):
 
     def get_x_point_to_recover_file(self, file_num):
         specific_set = self.get_RSets_from_file(file_num)
-        index_point_inside_set = (file_num -1 ) % self.R
+        index_point_inside_set = (file_num -1 ) % (self.R+1)
         specific_set_sega_version = []
         point_to_recover = 0
         for i in range(0,len(specific_set)):
@@ -116,50 +128,37 @@ class lrc(decoder.Decoder):
                 specific_set_sega_version.append(super().from_decimal_to_sage_polinomial(specific_set[i]))
         return specific_set_sega_version, point_to_recover    
         #return "a","b"
-    
+
+    def write_file_symbol(self, file_num, symbol):
+        f = open("TestFile.shar"+str(file_num), "ab")
+        f.write(symbol.encode('utf-8'))
+        f.close()
+
+
     def getWord(self, byte_position):
         word = []
         for i in range(0,len(self.files_data)):
             word.append(self.files_data[i][byte_position])
         return word
 
+    def translate(self, word):
+        return self.words_dict[str(word)]
+
+new_decodification()
 decoder = lrc()
+print(decoder.words_dict)
+i=-1
+while True:
+    i=i+1
+    try:
+        coded_word = decoder.getWord(i)
+        print(coded_word)
+        decoded_word = [chr(x) for x in decoder.translate(coded_word)]
+        f = open("Decodified.txt", "ab")
+        for j in range(0,len(decoded_word)):
+            f.write(decoded_word[j].encode('utf-8'))
+        f.close()
 
-decoder.getWord(1)
-
-
-"""
-
-
-decoder = lrc()
-for i in range(0,4):
-    data = [chr(x) for x in decoder.read_byte_posticion(i) ]
-    print(data)
-"""
-
-
-"""
-field = GF(2**8, 'a')
-a = field.gen()
-R = PolynomialRing(field, "x")
-points = [(a**6+a**5+1,a**7+a**6+a**5+a**4+a**2+1), (a**7+a**5+a**3+a,a**7+a**6+a**3+a**2+a)]
-polynom = R.lagrange_polynomial(points)
-print(polynom.coefficients(sparse=False))
-print(polynom(a**7+a**6+a**3+a+1))
-
-"""
-
-"""
-Lugi ten estos sets [[1, 214, 215], [97, 170, 203], [2, 177, 179]] e perdeu o valor correspondiente o set 203
-Esta é a palabra codificada [4,27,28,245,206,105,158,80,152]
-Interesanos a parte do set de recuperacion. 
-O set é [97, 170, 203]
-os valores asociados son [245,206,105] (obviamente o 105 non o sabemos que foi o que se perdeu)
-Sabemos que f(97)=245 e sabemos que f(170)=206
-Calculando o polinomio de grado 1 que pasa por eses puntos quedanos [66 82]. Evaluamos ese polinomio en 203 e tennos que dar 105
-"""
-"""
-https://stackoverflow.com/questions/48065360/interpolate-polynomial-over-a-finite-field
-"""
-
-
+    except IndexError:
+        print("End of decodification")
+        exit()
